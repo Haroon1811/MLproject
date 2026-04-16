@@ -2,7 +2,7 @@
 # 1. API REQUESTS
 # ==============================
 import requests
-"""
+
 # GET request
 get_resp = requests.get("https://jsonplaceholder.typicode.com/posts")
 print("GET Status:", get_resp.status_code)
@@ -212,12 +212,12 @@ try:
 
 except FileNotFoundError:
     print("\nEDA.csv file not found. Skipping EDA section.")
-"""
+
 
 # ==============================
 # END OF SCRIPT
 # ==============================
-"""
+
 import requests
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -299,7 +299,7 @@ df_clean = df[abs(df["z"]) < 2]
 
 print(df_clean)
 
-"""
+
 
 from scipy.spatial.distance import mahalanobis
 import numpy as np
@@ -333,3 +333,192 @@ df = sns.load_dataset("tips")
 sns.scatterplot(x="total_bill", y="tip", data=df)
 plt.title("Bill vs Tip")
 plt.show()
+
+
+
+# ============================================
+# EXPLORATORY DATA ANALYSIS - FULL SOLUTION FILE
+# Covers: API, Scraping, Cleaning, EDA, Outliers
+# ============================================
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import requests
+
+# ============================================
+# 1. API DATA FETCHING + VISUALIZATION
+# ============================================
+print("\n--- API DATA FETCHING ---")
+res = requests.get("https://jsonplaceholder.typicode.com/posts")
+data = res.json()
+
+df_api = pd.DataFrame(data)
+print(df_api.head())
+
+# Visualization
+plt.hist(df_api["userId"], bins=10)
+plt.title("Posts per User")
+plt.xlabel("User ID")
+plt.ylabel("Frequency")
+plt.show()
+
+
+# ============================================
+# 2. WEB SCRAPING
+# ============================================
+print("\n--- WEB SCRAPING ---")
+from bs4 import BeautifulSoup
+
+res = requests.get("https://quotes.toscrape.com/")
+soup = BeautifulSoup(res.text, "html.parser")
+
+quotes = [q.text for q in soup.find_all("span", class_="text")]
+print("Sample Quotes:", quotes[:5])
+
+# Quote length visualization
+lengths = [len(q) for q in quotes]
+plt.hist(lengths, bins=5)
+plt.title("Quote Length Distribution")
+plt.show()
+
+
+# ============================================
+# 3. MISSING VALUE HANDLING
+# ============================================
+print("\n--- MISSING VALUES ---")
+data = {"marks": [45, 50, np.nan, 48, 47, np.nan, 49]}
+df = pd.DataFrame(data)
+
+print("Before:\n", df)
+
+df["marks"].fillna(df["marks"].mean(), inplace=True)
+
+print("After:\n", df)
+
+plt.plot(df["marks"], marker='o')
+plt.title("After Filling Missing Values")
+plt.show()
+
+
+# ============================================
+# 4. DATA WRANGLING (GROUPBY)
+# ============================================
+print("\n--- DATA WRANGLING ---")
+df = pd.DataFrame({
+    "Department": ["IT", "IT", "HR", "HR"],
+    "Salary": [50000, 60000, 40000, 45000]
+})
+
+grouped = df.groupby("Department")["Salary"].mean()
+print(grouped)
+
+grouped.plot(kind="bar")
+plt.title("Average Salary")
+plt.show()
+
+
+# ============================================
+# 5. IQR OUTLIER DETECTION
+# ============================================
+print("\n--- IQR OUTLIERS ---")
+data = {"marks": [45, 50, 52, 48, 47, 90, 49]}
+df = pd.DataFrame(data)
+
+sns.boxplot(y=df["marks"])
+plt.title("Boxplot")
+plt.show()
+
+Q1 = df["marks"].quantile(0.25)
+Q3 = df["marks"].quantile(0.75)
+IQR = Q3 - Q1
+
+lower = Q1 - 1.5 * IQR
+upper = Q3 + 1.5 * IQR
+
+df_iqr = df[(df["marks"] >= lower) & (df["marks"] <= upper)]
+print("IQR Cleaned:\n", df_iqr)
+
+
+# ============================================
+# 6. Z-SCORE OUTLIER DETECTION
+# ============================================
+print("\n--- Z-SCORE ---")
+from scipy.stats import zscore
+
+df["z"] = zscore(df["marks"])
+df_z = df[abs(df["z"]) < 2]
+
+print(df_z)
+
+
+# ============================================
+# 7. MAHALANOBIS DISTANCE
+# ============================================
+print("\n--- MAHALANOBIS ---")
+from scipy.spatial.distance import mahalanobis
+
+data = np.array([[10, 20], [12, 22], [11, 21], [50, 100]])
+
+mean = data.mean(axis=0)
+cov = np.cov(data.T)
+inv_cov = np.linalg.inv(cov)
+
+distances = [mahalanobis(x, mean, inv_cov) for x in data]
+print("Distances:", distances)
+
+
+# ============================================
+# 8. LOCAL OUTLIER FACTOR
+# ============================================
+print("\n--- LOF ---")
+from sklearn.neighbors import LocalOutlierFactor
+
+lof = LocalOutlierFactor(n_neighbors=2)
+labels = lof.fit_predict(data)
+
+print("LOF Labels:", labels)
+
+
+# ============================================
+# 9. ONE CLASS SVM
+# ============================================
+print("\n--- ONE CLASS SVM ---")
+from sklearn.svm import OneClassSVM
+
+model = OneClassSVM(nu=0.1)
+model.fit(data)
+
+svm_labels = model.predict(data)
+print("SVM Labels:", svm_labels)
+
+
+# ============================================
+# 10. EDA (BUILT-IN DATASET)
+# ============================================
+print("\n--- EDA ---")
+df = sns.load_dataset("tips")
+
+print(df.head())
+print("Shape:", df.shape)
+
+# Scatterplot
+sns.scatterplot(x="total_bill", y="tip", data=df)
+plt.title("Bill vs Tip")
+plt.show()
+
+# Histogram
+plt.hist(df["total_bill"], bins=10)
+plt.title("Total Bill Distribution")
+plt.show()
+
+# Countplot
+sns.countplot(x="day", data=df)
+plt.title("Count by Day")
+plt.show()
+
+
+# ============================================
+# END
+# ============================================
