@@ -2,7 +2,7 @@
 # 1. API REQUESTS
 # ==============================
 import requests
-
+"""
 # GET request
 get_resp = requests.get("https://jsonplaceholder.typicode.com/posts")
 print("GET Status:", get_resp.status_code)
@@ -212,8 +212,124 @@ try:
 
 except FileNotFoundError:
     print("\nEDA.csv file not found. Skipping EDA section.")
-
+"""
 
 # ==============================
 # END OF SCRIPT
 # ==============================
+"""
+import requests
+import pandas as pd
+import matplotlib.pyplot as plt
+
+res = requests.get("https://jsonplaceholder.typicode.com/posts")
+data = res.json()
+
+df = pd.DataFrame(data)
+
+# Visualization
+plt.hist(df["userId"], bins=10)
+plt.title("Distribution of Posts per User")
+plt.xlabel("User ID")
+plt.ylabel("Frequency")
+plt.show()
+
+from bs4 import BeautifulSoup
+import requests
+import matplotlib.pyplot as plt
+
+res = requests.get("https://quotes.toscrape.com/")
+soup = BeautifulSoup(res.text, "html.parser")
+
+quotes = [q.text for q in soup.find_all("span", class_="text")]
+
+lengths = [len(q) for q in quotes]
+
+plt.hist(lengths, bins=5)
+plt.title("Quote Length Distribution")
+plt.xlabel("Length")
+plt.ylabel("Frequency")
+plt.show()
+
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+data = {"marks": [45, 50, np.nan, 48, 47, np.nan, 49]}
+df = pd.DataFrame(data)
+
+# Fill missing
+df["marks"].fillna(df["marks"].mean(), inplace=True)
+
+plt.plot(df["marks"], marker='o')
+plt.title("Marks After Filling Missing Values")
+plt.show()
+
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+df = pd.DataFrame({
+    "Department": ["IT", "IT", "HR", "HR"],
+    "Salary": [50000, 60000, 40000, 45000]
+})
+
+grouped = df.groupby("Department")["Salary"].mean()
+print(grouped)
+
+grouped.plot(kind="bar")
+plt.title("Average Salary by Department")
+plt.show()
+
+
+import seaborn as sns
+
+data = {"marks": [45, 50, 52, 48, 47, 90, 49]}
+df = pd.DataFrame(data)
+
+sns.boxplot(y=df["marks"])
+plt.show()
+
+
+from scipy.stats import zscore
+
+df["z"] = zscore(df["marks"])
+df_clean = df[abs(df["z"]) < 2]
+
+print(df_clean)
+
+"""
+
+from scipy.spatial.distance import mahalanobis
+import numpy as np
+import matplotlib.pyplot as plt
+
+data = np.array([[10,20],[12,22],[11,21],[50,100]])
+
+mean = data.mean(axis=0)
+cov = np.cov(data.T)
+inv_cov = np.linalg.inv(cov)
+
+distances = [mahalanobis(x, mean, inv_cov) for x in data]
+
+print(distances)
+
+
+from sklearn.neighbors import LocalOutlierFactor
+
+X = [[10,20],[12,22],[11,21],[50,100]]
+
+lof = LocalOutlierFactor(n_neighbors=2)
+labels = lof.fit_predict(X)
+
+print(labels)
+
+
+import seaborn as sns
+
+df = sns.load_dataset("tips")
+
+sns.scatterplot(x="total_bill", y="tip", data=df)
+plt.title("Bill vs Tip")
+plt.show()
